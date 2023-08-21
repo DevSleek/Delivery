@@ -16,6 +16,15 @@ class User(Base):
     def __repr__(self):
         return self.username
 
+class Product(Base):
+    __tablename__ = 'product'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    price = Column(Integer)
+
+    def __repr__(self):
+        return self.name
+
 class Order(Base):
     STATUSES = (
         ('PENDING', 'pending'),
@@ -34,11 +43,3 @@ class Order(Base):
     def __repr__(self):
         return f"order: {self.id}"
 
-class Product(Base):
-    __tablename__ = 'product'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100))
-    price = Column(Integer)
-
-    def __repr__(self):
-        return self.name
