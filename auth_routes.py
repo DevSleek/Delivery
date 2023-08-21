@@ -4,6 +4,7 @@ from fastapi.exceptions import HTTPException
 from werkzeug.security import generate_password_hash, \
     check_password_hash
 from fastapi_jwt_auth import AuthJWT
+from sqlalchemy import or_
 
 from schemas import SignUpModel, LogInModel
 from database import session, engine
@@ -16,7 +17,12 @@ auth_router = APIRouter(
 session = session(bind=engine)
 
 @auth_router.get('/')
-async def signup():
+async def signup(Authorize: AuthJWT=Depends()):
+    try:
+        Authorize.jwt_required()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+
     return {'message': 'This is auth rote signup page'}
 
 @auth_router.post('/signup', status_code=status.HTTP_201_CREATED)
@@ -64,7 +70,12 @@ async def signup(user: SignUpModel):
 @auth_router.post('/login', status_code=status.HTTP_200_OK)
 async def login(user:LogInModel, Authorize: AuthJWT=Depends()):
 
-    db_user = session.query(User).filter(User.username == user.username).first()
+    db_user = session.query(User).filter(
+        or_(
+            User.username == user.username_or_email,
+            User.email == user.username_or_email
+        )
+    ).first()
 
     if db_user and check_password_hash(db_user.password, user.password):
         access_token = Authorize.create_access_token(subject=db_user.username)
